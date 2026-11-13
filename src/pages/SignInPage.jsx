@@ -1,79 +1,59 @@
 import { useState } from "react";
+import API_URL from "../services/api";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const SingUpPage = () => {
+const SignInPage = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  
-
-
-  const [formData, setformData] = useState({
-    fullName: "",
+  const [loginData, setLoginData] = useState({
     username: "",
-    email: "",
     password: "",
   });
-  const [avatar, setAvatar] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
   const handleChange = (e) => {
-    setformData({
-      ...formData,
+    setLoginData({
+      ...loginData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatar(file);
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  const handLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    if (!avatar) {
-      setError("Please upload an avatar image");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const dataToSend = new FormData();
-
-      dataToSend.append("fullName", formData.fullName);
-      dataToSend.append("username", formData.username);
-      dataToSend.append("email", formData.email);
-      dataToSend.append("password", formData.password);
-
-      dataToSend.append("avatar", avatar);
-
-      const response = await fetch(
-        `http://localhost:8000/api/v1/users/register`,
-        {
-          method: "POST",
-          body: dataToSend,
+      const response = await fetch(`${API_URL}/users/login`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(loginData),
+      });
+
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "SingUp failed Please try again");
+        throw new Error(data.message || "Login failed Please try again ");
       }
 
       setSuccess(true);
-      console.log("User registered successfully", data);
+      console.log("User loggedIn successfully", data);
+      login();
+      navigate("/");
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden bg-[#09090f] px-4 py-10">
       {/* Background Effects */}
@@ -96,42 +76,18 @@ const SingUpPage = () => {
         )}
         {success && (
           <div className="w-full p-4 mb-4 text-sm font-semibold text-green-500 bg-green-500/10 border border-green-500/20 rounded-xl backdrop-blur-md">
-            Account created successfully!
+            Logged In successfully!
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div>
-            <input
-              type="text"
-              name="fullName"
-              placeholder="Enter your full name"
-              value={formData.fullName}
-              onChange={handleChange}
-              required
-              className="w-full p-4 text-white placeholder-gray-500 bg-white/5 border border-white/10 rounded-xl outline-none transition-all duration-300 focus:border-red-500 focus:bg-white/8 focus:ring-4 focus:ring-red-500/10 hover:border-white/20"
-            />
-          </div>
-
+        <form onSubmit={handLogin} className="flex flex-col gap-5">
           <div>
             <input
               type="text"
               name="username"
-              placeholder="Enter your username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              className="w-full p-4 text-white placeholder-gray-500 bg-white/5 border border-white/10 rounded-xl outline-none transition-all duration-300 focus:border-red-500 focus:bg-white/8 focus:ring-4 focus:ring-red-500/10 hover:border-white/20"
-            />
-          </div>
-
-          <div>
-            <input
-              type="email"
-              name="email"
               placeholder="Enter your Email"
-              value={formData.email}
+              value={loginData.username}
               onChange={handleChange}
               required
               className="w-full p-4 text-white placeholder-gray-500 bg-white/5 border border-white/10 rounded-xl outline-none transition-all duration-300 focus:border-red-500 focus:bg-white/8 focus:ring-4 focus:ring-red-500/10 hover:border-white/20"
@@ -143,20 +99,8 @@ const SingUpPage = () => {
               type="password"
               name="password"
               placeholder="create password"
-              value={formData.password}
+              value={loginData.password}
               onChange={handleChange}
-              required
-              className="w-full p-4 text-white placeholder-gray-500 bg-white/5 border border-white/10 rounded-xl outline-none transition-all duration-300 focus:border-red-500 focus:bg-white/8 focus:ring-4 focus:ring-red-500/10 hover:border-white/20"
-            />
-          </div>
-
-          <div>
-            <input
-              type="file"
-              name="avatar"
-              placeholder="upload avatar"
-              accept="image/png, image/jpeg, image/jpg"
-              onChange={handleFileChange}
               required
               className="w-full p-4 text-white placeholder-gray-500 bg-white/5 border border-white/10 rounded-xl outline-none transition-all duration-300 focus:border-red-500 focus:bg-white/8 focus:ring-4 focus:ring-red-500/10 hover:border-white/20"
             />
@@ -167,7 +111,7 @@ const SingUpPage = () => {
             disabled={loading}
             className="w-full py-4 mt-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-500 text-white font-bold tracking-wide shadow-lg shadow-red-600/20 hover:shadow-red-600/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-50"
           >
-            {loading ? "Uploading & Creating..." : "Sign Up"}
+            {loading ? "Uploading & Authenticating..." : "LogIn"}
           </button>
         </form>
       </div>
@@ -175,4 +119,4 @@ const SingUpPage = () => {
   );
 };
 
-export default SingUpPage;
+export default SignInPage;
